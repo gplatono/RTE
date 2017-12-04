@@ -1,0 +1,55 @@
+import csv
+import tensorflow as tf
+import keras
+from pandas import DataFrame
+import pandas
+import numpy as np
+from keras.datasets import imdb
+from keras import *
+from keras.preprocessing import sequence
+from keras.layers import *
+from keras.layers import LSTM
+from keras.models import Sequential
+from keras.layers.embeddings import Embedding
+
+df = pandas.read_csv("joci.csv")
+#Prop = df['Property']
+#subt = df[['Pred.Token', 'Pred.Lemma', 'Arg.Phrase', 'Property']]
+subt2 = df.iloc[0, :]
+print (subt2)
+#print (list(df))
+
+np.random.seed(7)
+top_words = 1000
+(xtr, ytr), (xt, yt) = imdb.load_data(num_words=top_words)
+df = df.values
+xtr1 = sequence.pad_sequences(df[:,0:1]
+xtr2 = df[:,1:2]
+print (xtr)
+xtr = sequence.pad_sequences(xtr, 500)
+xt = sequence.pad_sequences(xt, 500)
+
+emb_vl = 16
+
+inp1 = Input(shape=(100,), dtype='int32', name='premise')
+inp1 = Embedding(top_words, emb_vl, input_length=500)(inp1)
+inp2 = Input(shape=(100,), dtype='int32', name='conclusion')
+inp2 = Embedding(top_words, emb_vl, input_length=500)(inp2)
+merge = keras.layers.concatenate([inp1, inp2])
+merge = Dense(256, activation='relu')(merge)
+merge = LSTM(128)(merge)
+#merge = LSTM(128)(merge)
+output = Dense(1, activation='sigmoid')(merge)
+
+#model = Sequential()
+#model.add(Embedding(top_words, emb_vl, input_length=500))
+#model.add(LSTM(50))
+#model.add(Dense(1, activation="sigmoid"))
+model = Model(inputs=[inp1, inp2], outputs=[output])
+model.compile(loss="binary_crossentropy", optimizer="ADAM", metrics=['accuracy'])
+model.fit
+print(model.summary())
+#model.fit(xtr, ytr, validation_data=(xt, yt), epochs=3, batch_size=64)
+
+#scores = model.evaluate(xt, yt, verbose=0)
+#print (scores[1]*100)
