@@ -11,6 +11,7 @@ from keras.layers import *
 from keras.layers import LSTM
 from keras.models import Sequential
 from keras.layers.embeddings import Embedding
+from keras.preprocessing.text import Tokenizer
 
 df = pandas.read_csv("joci.csv")
 #Prop = df['Property']
@@ -18,21 +19,39 @@ df = pandas.read_csv("joci.csv")
 subt2 = df.iloc[0, :]
 print (subt2)
 print (list(df))
-
+print (np.array([[1], [2]]).T[0])
 np.random.seed(7)
 top_words = 1000
-(xtr, ytr), (xt, yt) = imdb.load_data(num_words=top_words)
+#(xtr, ytr), (xt, yt) = imdb.load_data(num_words=top_words)
+#print (xtr[0])
 df = df.values
-xtr = df[:,0:2]
-print (xtr)
-xtr = sequence.pad_sequences(xtr, 500)
-xt = sequence.pad_sequences(xt, 500)
+xtr1 = df[0:35000,0:1].T[0].tolist()
+xtr2 = df[0:35000,1:2].T[0].tolist()
+ytr = df[0:35000,2:3].T[0].tolist()
+xt1 = df[35000:, 0:1].T[0].tolist()
+xt2 = df[35000:, 1:2].T[0].tolist()
+yt = df[35000:, 2:3].T[0].tolist()
+data = xtr1 + xtr2 + xt1 + xt2
+print (len(data))
+tknzr = Tokenizer(num_words=None,
+                  filters='!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n',
+                  lower=True,
+                  split=" ",
+                  char_level=False)
+tknzr.fit_on_texts(data)
+xtr1 = tknzr.texts_to_sequences(xtr1)
+xtr2 = tknzr.texts_to_sequences(xtr2)
+xt1 = tknzr.texts_to_sequences(xt1)
+xt2 = tknzr.texts_to_sequences(xt2)
+print (xtr1)
+#xtr = sequence.pad_sequences(xtr, 500)
+#xt = sequence.pad_sequences(xt, 500)
 
 emb_vl = 16
 
-inp1 = Input(shape=(100,), dtype='int32', name='premise')
+inp1 = Input(shape=(None, num_encoder_tokens), name='premise')
 inp1 = Embedding(top_words, emb_vl, input_length=500)(inp1)
-inp2 = Input(shape=(100,), dtype='int32', name='conclusion')
+inp2 = Input(shape=(None, num_encoder_tokens), name='conclusion')
 inp2 = Embedding(top_words, emb_vl, input_length=500)(inp2)
 merge = keras.layers.concatenate([inp1, inp2])
 merge = Dense(256, activation='relu')(merge)
